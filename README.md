@@ -6,8 +6,6 @@ A beginner WebAR learning example based on the supplied lecture Step 5. Point a 
 
 Group number: 48
 
-Members: ADD YOUR GROUP MEMBERS AND STUDENT IDS
-
 Public repository URL: https://github.com/Pahan-Pehasara/ar-nature-museum
 
 Live HTTPS URL: https://pahan-pehasara.github.io/ar-nature-museum/
