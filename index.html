@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mini Nature Museum AR</title>
+  <!-- Keep the lecture's versions. A-Frame must load before AR.js. -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.3.0/dist/aframe-master.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+  <script>
+    AFRAME.registerComponent('color-changer', {
+      init: function () {
+        const colors = ['#EF2D5E', '#FFC65D', '#4CC3D9', '#7BC8A4'];
+        let index = 0;
+        this.el.addEventListener('click', () => {
+          index = (index + 1) % colors.length;
+          this.el.setAttribute('color', colors[index]);
+        });
+      }
+    });
+
+    // New behaviour: tap the green box to enlarge it; tap again to reset it.
+    AFRAME.registerComponent('grow-toggle', {
+      init: function () {
+        let grown = false;
+        const startY = this.el.getAttribute('position').y;
+        this.el.addEventListener('click', () => {
+          grown = !grown;
+          this.el.setAttribute('scale', grown ? '1.5 1.5 1.5' : '1 1 1');
+          // The box is 0.3 high. Raise its centre to keep its bottom grounded.
+          this.el.setAttribute('position', 'y', startY + (grown ? 0.075 : 0));
+        });
+      }
+    });
+
+    AFRAME.registerComponent('marker-status', {
+      init: function () {
+        const banner = document.querySelector('#status');
+        this.el.addEventListener('markerFound', () => {
+          banner.textContent = 'Marker FOUND - explore the Nature Museum';
+          banner.style.background = '#2E7D32';
+        });
+        this.el.addEventListener('markerLost', () => {
+          banner.textContent = 'Marker LOST - show the whole Hiro marker';
+          banner.style.background = '#C62828';
+        });
+      }
+    });
+  </script>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+    a-scene { width: 100vw; height: 100vh; }
+    #status, #help {
+      position: fixed; left: 0; right: 0; z-index: 999;
+      padding: 12px; color: white; text-align: center;
+      pointer-events: none;
+    }
+    #status { top: 0; background: #C62828; font-weight: bold; }
+    #help { bottom: 0; background: rgba(0, 0, 0, 0.72); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="status" role="status" aria-live="polite">Looking for the Hiro marker...</div>
+  <div id="help">Tap the bouncing ball to change colour. Tap the green box to grow or reset it.</div>
+
+  <a-scene embedded vr-mode-ui="enabled: false"
+           renderer="antialias: true; alpha: true"
+           arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-assets timeout="30000">
+      <a-asset-item id="avocado-model" src="models/Avocado.glb"></a-asset-item>
+    </a-assets>
+
+    <a-marker preset="hiro" marker-status>
+      <!-- Ground and central exhibit stand. -->
+      <a-plane rotation="-90 0 0" width="2.2" height="1.8"
+               color="#173B2B" material="side: double"></a-plane>
+      <a-cylinder position="0 0.15 -0.1" radius="0.28" height="0.3"
+                  color="#F1E9D2"></a-cylinder>
+
+      <!-- Real GLB model, not the workshop duck. -->
+      <a-entity gltf-model="#avocado-model" position="0 0.301 -0.1"
+                scale="10 10 10"
+                animation="property: rotation; from: 0 0 0; to: 0 360 0;
+                           dur: 9000; easing: linear; loop: true"></a-entity>
+
+      <!-- Workshop interaction and position animation. -->
+      <a-sphere class="clickable" color-changer radius="0.18" color="#EF2D5E"
+                position="0.75 0.3 0.3"
+                animation="property: position; from: 0.75 0.3 0.3;
+                           to: 0.75 0.75 0.3; dir: alternate;
+                           dur: 900; easing: easeInOutQuad; loop: true"></a-sphere>
+
+      <!-- New interaction, written as a separate custom component. -->
+      <a-box class="clickable" grow-toggle position="-0.7 0.15 0.4"
+             width="0.3" height="0.3" depth="0.3" color="#7BC043"></a-box>
+
+      <!-- A simple tree made with two more primitives. -->
+      <a-cylinder position="-0.7 0.2 -0.4" radius="0.06" height="0.4"
+                  color="#795548"></a-cylinder>
+      <a-cone position="-0.7 0.6 -0.4" radius-bottom="0.28" radius-top="0"
+              height="0.55" color="#36A269"></a-cone>
+
+      <a-text value="MINI NATURE MUSEUM" position="0 1.2 0"
+              align="center" width="2.8" color="#FFFFFF"></a-text>
+      <a-text value="Avocado exhibit" position="0 0.08 0.78"
+              rotation="-90 0 0" align="center" width="1.8" color="#FFFFFF"></a-text>
+    </a-marker>
+
+    <a-entity light="type: ambient; intensity: 0.9"></a-entity>
+    <a-entity light="type: directional; intensity: 0.8" position="1 3 2"></a-entity>
+    <a-entity camera cursor="rayOrigin: mouse; fuse: false"
+              raycaster="objects: .clickable"></a-entity>
+  </a-scene>
+</body>
+</html>
